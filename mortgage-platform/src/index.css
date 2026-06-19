@@ -112,7 +112,7 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: #9fe026; }
 
 /* ═══════════════════════════════════════════════
-   APP LAYOUT (sidebar + main content)
+   APP LAYOUT
 ═══════════════════════════════════════════════ */
 .app-layout {
   display: flex;
@@ -123,9 +123,11 @@ body {
   flex: 1;
   min-width: 0;
   overflow-x: hidden;
+  padding-top: 68px; /* height of Navbar */
 }
 .app-main.auth-page {
   width: 100%;
+  padding-top: 0;
 }
 
 /* ═══════════════════════════════════════════════
@@ -538,6 +540,9 @@ body {
   border-color: #ef4444;
   box-shadow: 0 0 0 3px rgba(239,68,68,0.08);
 }
+/* Icon-padded variants */
+.input-icon-left  { padding-left: 40px !important; }
+.input-icon-right { padding-right: 40px !important; }
 
 /* ════════════════════════
    PROGRESS BAR  (lime green from image)
@@ -745,5 +750,84 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
   .app-main {
     padding-bottom: 70px;
     margin-left: 0 !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE — Bottom Nav padding & page fixes
+═══════════════════════════════════════════════ */
+
+/* All pages need bottom padding so content isn't hidden behind bottom nav */
+@media (max-width: 1023px) {
+  /* Navbar height offset for pages */
+  body > div > div > main,
+  .page-content {
+    padding-bottom: 80px;
+  }
+
+  /* Every section/page wrapper gets bottom padding */
+  section:last-of-type,
+  footer {
+    padding-bottom: 90px;
+  }
+
+  /* Landing page hero — show calc on mobile */
+  .hero-calc-mobile {
+    display: block !important;
+  }
+
+  /* Auth pages — full width on mobile */
+  .auth-form-container {
+    padding: 20px 16px 80px;
+  }
+
+  /* Apply page, calculator page bottom padding */
+  .min-h-screen {
+    padding-bottom: 80px;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   BOTTOM NAV — Active indicator dot
+═══════════════════════════════════════════════ */
+.bottom-nav-active-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #0a0a0a;
+  margin: 0 auto;
+}
+
+/* ═══════════════════════════════════════════════
+   AUTH PAGES — Mobile full screen fix
+═══════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  /* Make auth pages full screen with proper scroll */
+  .auth-page-wrapper {
+    min-height: 100vh;
+    min-height: 100dvh; /* dynamic viewport height */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Input with left icon — ensure text isn't hidden */
+  .input-field {
+    padding-left: 16px; /* reset — inline style handles icon padding */
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   HERO SECTION — Mobile layout
+═══════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  /* Stack hero grid on mobile */
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Hero calculator card — visible on all screens */
+  .hero-calc-card {
+    display: block !important;
+    margin-top: 32px;
   }
 }

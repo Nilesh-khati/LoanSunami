@@ -265,7 +265,7 @@ export default function CalculatorPage() {
   const [activeTab, setActiveTab] = useState(0)
 
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6" style={{ background: '#f9f9f9' }}>
+    <div className="min-h-screen pb-24 px-6" style={{ background: '#f9f9f9' }}>
       <div className="max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

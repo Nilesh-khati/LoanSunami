@@ -1,8 +1,11 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { TrendingDown, TrendingUp, Minus, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import ratesApi from '../api/rates.js'
 
-const rates = [
+// Fallback static data shown while loading or if API fails
+const FALLBACK_RATES = [
   { type: 'Home Loan',        rate: '8.50%', trend: 'down',   lender: 'SBI',   tenure: 'Up to 30 yrs' },
   { type: 'Balance Transfer', rate: '8.75%', trend: 'stable', lender: 'HDFC',  tenure: 'Up to 25 yrs' },
   { type: 'Plot Loan',        rate: '9.20%', trend: 'up',     lender: 'ICICI', tenure: 'Up to 20 yrs' },
@@ -16,6 +19,26 @@ const trendConfig = {
 }
 
 export default function RatesSection() {
+  const [rates, setRates] = useState(FALLBACK_RATES)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let mounted = true
+    ratesApi.getAll()
+      .then(res => {
+        if (mounted && res.data && res.data.length > 0) {
+          setRates(res.data)
+        }
+      })
+      .catch(() => {
+        // silently fall back to static data
+      })
+      .finally(() => {
+        if (mounted) setLoading(false)
+      })
+    return () => { mounted = false }
+  }, [])
+
   return (
     <section className="py-20 px-6" id="rates" style={{ background: '#ffffff' }}>
       <div className="max-w-7xl mx-auto">
@@ -49,11 +72,12 @@ export default function RatesSection() {
         </motion.div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {rates.map(({ type, rate, trend, lender, tenure }, i) => {
-            const { icon: TrendIcon, bg, text, label } = trendConfig[trend]
+          {rates.map(({ type, rate, trend, lender, tenure, _id }, i) => {
+            const trendKey = trend || 'stable'
+            const { icon: TrendIcon, bg, text, label } = trendConfig[trendKey] || trendConfig.stable
             return (
               <motion.div
-                key={type}
+                key={_id || type}
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}

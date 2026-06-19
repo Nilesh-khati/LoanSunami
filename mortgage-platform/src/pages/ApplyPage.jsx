@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, ArrowRight, ArrowLeft, User, Briefcase, Home, DollarSign, FileText, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import leadsApi from '../api/leads.js'
 
 const steps = [
   { id: 1, title: 'Personal Info',  icon: User,       desc: 'Basic contact details' },
@@ -51,6 +52,8 @@ const SelectField = ({ label, value, onChange, options }) => (
 export default function ApplyPage() {
   const [step, setStep] = useState(1)
   const [submitted, setSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({
     firstName: '', lastName: '', email: '', phone: '', dob: '',
     employmentType: '', employer: '', monthlyIncome: '', workExperience: '',
@@ -62,13 +65,33 @@ export default function ApplyPage() {
   const update = field => e => setForm({ ...form, [field]: e.target.value })
   const next = () => step < 5 ? setStep(step + 1) : handleSubmit()
   const back = () => setStep(step - 1)
-  const handleSubmit = () => setSubmitted(true)
   const progress = (step / 5) * 100
+
+  const handleSubmit = async () => {
+    setSubmitError('')
+    setSubmitting(true)
+    try {
+      await leadsApi.submit({
+        ...form,
+        monthlyIncome: form.monthlyIncome ? Number(form.monthlyIncome) : undefined,
+        loanAmount: Number(form.loanAmount),
+        downPayment: form.downPayment ? Number(form.downPayment) : undefined,
+        propertyValue: form.propertyValue ? Number(form.propertyValue) : undefined,
+        monthlyExpenses: form.monthlyExpenses ? Number(form.monthlyExpenses) : undefined,
+        existingLoans: form.existingLoans ? Number(form.existingLoans) : undefined,
+      })
+      setSubmitted(true)
+    } catch (err) {
+      setSubmitError(err.message || 'Submission failed. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   if (submitted) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center px-6 pt-20"
+        className="min-h-screen flex items-center justify-center px-6 pt-20 pb-24"
         style={{ background: '#f9f9f9' }}
       >
         <motion.div
@@ -111,7 +134,7 @@ export default function ApplyPage() {
   }
 
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6" style={{ background: '#f9f9f9' }}>
+    <div className="min-h-screen pb-24 px-6" style={{ background: '#f9f9f9' }}>
       <div className="max-w-xl mx-auto">
 
         {/* Header */}
@@ -277,6 +300,18 @@ export default function ApplyPage() {
             </motion.div>
           </AnimatePresence>
 
+          {/* Submit error */}
+          {submitError && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-5 text-xs rounded-xl px-4 py-3"
+              style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626' }}
+            >
+              {submitError}
+            </motion.div>
+          )}
+
           {/* Navigation */}
           <div
             className="flex items-center justify-between mt-8 pt-6"
@@ -284,7 +319,7 @@ export default function ApplyPage() {
           >
             <button
               onClick={back}
-              disabled={step === 1}
+              disabled={step === 1 || submitting}
               className="flex items-center gap-2 text-sm font-medium transition-all disabled:opacity-0 disabled:pointer-events-none"
               style={{ color: '#555555' }}
               onMouseEnter={e => { if (!e.currentTarget.disabled) e.currentTarget.style.color = '#0a0a0a' }}
@@ -292,9 +327,21 @@ export default function ApplyPage() {
             >
               <ArrowLeft size={15} /> Back
             </button>
-            <button onClick={next} className="btn-primary flex items-center gap-2">
-              {step === 5 ? 'Submit Application' : 'Continue'}
-              <ArrowRight size={15} />
+            <button onClick={next} disabled={submitting} className="btn-primary flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+              {submitting ? (
+                <>
+                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Submitting…
+                </>
+              ) : (
+                <>
+                  {step === 5 ? 'Submit Application' : 'Continue'}
+                  <ArrowRight size={15} />
+                </>
+              )}
             </button>
           </div>
         </div>

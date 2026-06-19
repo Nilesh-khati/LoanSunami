@@ -71,7 +71,7 @@ function HeroCalc() {
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6, delay: 0.2 }}
-      className="relative hidden lg:block"
+      className="relative w-full"
     >
       {/* White floating card */}
       <div
@@ -278,7 +278,7 @@ export default function LandingPage() {
           />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 py-16 grid lg:grid-cols-2 gap-16 items-center w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center w-full">
           {/* Left */}
           <div>
             <motion.div
@@ -766,7 +766,7 @@ export default function LandingPage() {
       <FAQSection />
 
       {/* ══ FINAL CTA ══ */}
-      <section className="py-20 px-6" style={{ background: "#f9f9f9" }}>
+      <section className="py-20 px-6 pb-28 lg:pb-20" style={{ background: "#f9f9f9" }}>
         <div className="max-w-2xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -803,7 +803,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══ FOOTER ══ */}
-      <footer style={{ background: "#0a0a0a" }}>
+      <footer style={{ background: "#0a0a0a", paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
             {
