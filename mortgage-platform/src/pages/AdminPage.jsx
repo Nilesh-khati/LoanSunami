@@ -85,23 +85,23 @@ function LeadsDashboard() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#0a0a0a' }}>
               <Zap size={14} color="#c8f542" fill="#c8f542" />
             </div>
-            <h1 className="text-2xl font-extrabold" style={{ color: '#0a0a0a', letterSpacing: '-0.03em' }}>Lead Dashboard</h1>
+            <h1 className="text-xl sm:text-2xl font-extrabold" style={{ color: '#0a0a0a', letterSpacing: '-0.03em' }}>Lead Dashboard</h1>
           </div>
           <p className="text-sm" style={{ color: '#888' }}>Manage and track all loan applications</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button onClick={fetchLeads} disabled={loading}
             className="w-9 h-9 rounded-xl flex items-center justify-center border transition-colors"
             style={{ background: '#fff', borderColor: '#e0e0e0', color: '#888' }} title="Refresh">
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           </button>
-          <button onClick={handleExport} disabled={exporting} className="btn-ghost flex items-center gap-2">
+          <button onClick={handleExport} disabled={exporting} className="btn-ghost flex items-center gap-2 text-sm">
             <Download size={14} />{exporting ? 'Exporting…' : 'Export CSV'}
           </button>
         </div>
@@ -135,8 +135,8 @@ function LeadsDashboard() {
       )}
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-5">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-3 mb-5">
+        <div className="relative">
           <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#ccc' }} />
           <input type="text" placeholder="Search by name, email, or city…"
             value={search} onChange={e => setSearch(e.target.value)} className="input-field pl-10" />
@@ -144,7 +144,7 @@ function LeadsDashboard() {
         <div className="flex gap-2 flex-wrap">
           {['All','New','Contacted','Qualified','Closed'].map(s => (
             <button key={s} onClick={() => setStatusFilter(s)}
-              className="px-4 py-2 rounded-full text-xs font-semibold transition-all"
+              className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
               style={{ background: statusFilter===s ? '#c8f542':'#fff', color: statusFilter===s ? '#0a0a0a':'#888', border: `1.5px solid ${statusFilter===s ? '#c8f542':'#e0e0e0'}` }}>
               {s}
             </button>
@@ -152,7 +152,7 @@ function LeadsDashboard() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table / Cards */}
       <div className="card overflow-hidden">
         {loading ? (
           <div className="py-20 text-center">
@@ -162,64 +162,111 @@ function LeadsDashboard() {
             </svg>
             <p className="text-sm" style={{ color: '#888' }}>Loading leads…</p>
           </div>
+        ) : leads.length === 0 ? (
+          <div className="py-16 text-center">
+            <Search size={28} className="mx-auto mb-3" style={{ color: '#ddd' }} />
+            <p className="text-sm" style={{ color: '#888' }}>No leads match your search</p>
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr style={{ borderBottom: '1px solid #f5f5f5' }}>
-                  {['Applicant','Contact','Loan','Income','Date','Status',''].map(h => (
-                    <th key={h} className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#888' }}>{h}</th>
+          <>
+            {/* Desktop table — hidden on mobile */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #f5f5f5' }}>
+                    {['Applicant','Contact','Loan','Income','Date','Status',''].map(h => (
+                      <th key={h} className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#888' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {leads.map((lead, i) => (
+                    <motion.tr key={lead._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
+                      className="transition-colors" style={{ borderBottom: '1px solid #fafafa' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#fafafa'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <td className="px-5 py-4">
+                        <div className="font-semibold text-sm" style={{ color: '#0a0a0a' }}>{lead.firstName} {lead.lastName}</div>
+                        <div className="text-xs" style={{ color: '#888' }}>{lead.city || '—'}</div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-1.5 text-xs mb-1" style={{ color: '#555' }}><Mail size={11}/>{lead.email}</div>
+                        <div className="flex items-center gap-1.5 text-xs" style={{ color: '#555' }}><Phone size={11}/>{lead.phone}</div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="text-sm font-semibold" style={{ color: '#0a0a0a' }}>{fmtAmount(lead.loanAmount)}</div>
+                        <div className="text-xs" style={{ color: '#888' }}>{lead.loanPurpose || '—'}</div>
+                      </td>
+                      <td className="px-5 py-4"><span className="text-sm" style={{ color: '#555' }}>{fmtIncome(lead.monthlyIncome)}</span></td>
+                      <td className="px-5 py-4"><span className="text-xs" style={{ color: '#888' }}>{fmtDate(lead.createdAt)}</span></td>
+                      <td className="px-5 py-4">
+                        {statusConfig[lead.status] && (
+                          <span className="text-xs font-semibold px-3 py-1 rounded-full"
+                            style={{ background: statusConfig[lead.status].bg, color: statusConfig[lead.status].text, border: `1px solid ${statusConfig[lead.status].border}` }}>
+                            {lead.status}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-5 py-4">
+                        <button onClick={() => setSelectedLead(lead)}
+                          className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors" style={{ color: '#aaa' }}
+                          onMouseEnter={e => { e.currentTarget.style.background='#f5f5f5'; e.currentTarget.style.color='#0a0a0a' }}
+                          onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#aaa' }}>
+                          <Eye size={14} />
+                        </button>
+                      </td>
+                    </motion.tr>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {leads.map((lead, i) => (
-                  <motion.tr key={lead._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
-                    className="transition-colors" style={{ borderBottom: '1px solid #fafafa' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#fafafa'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <td className="px-5 py-4">
-                      <div className="font-semibold text-sm" style={{ color: '#0a0a0a' }}>{lead.firstName} {lead.lastName}</div>
-                      <div className="text-xs" style={{ color: '#888' }}>{lead.city || '—'}</div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-1.5 text-xs mb-1" style={{ color: '#555' }}><Mail size={11}/>{lead.email}</div>
-                      <div className="flex items-center gap-1.5 text-xs" style={{ color: '#555' }}><Phone size={11}/>{lead.phone}</div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="text-sm font-semibold" style={{ color: '#0a0a0a' }}>{fmtAmount(lead.loanAmount)}</div>
-                      <div className="text-xs" style={{ color: '#888' }}>{lead.loanPurpose || '—'}</div>
-                    </td>
-                    <td className="px-5 py-4"><span className="text-sm" style={{ color: '#555' }}>{fmtIncome(lead.monthlyIncome)}</span></td>
-                    <td className="px-5 py-4"><span className="text-xs" style={{ color: '#888' }}>{fmtDate(lead.createdAt)}</span></td>
-                    <td className="px-5 py-4">
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards — shown on small screens */}
+            <div className="md:hidden divide-y" style={{ borderColor: '#f5f5f5' }}>
+              {leads.map((lead, i) => (
+                <motion.div
+                  key={lead._id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="p-4"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-semibold text-sm" style={{ color: '#0a0a0a' }}>{lead.firstName} {lead.lastName}</p>
+                      <p className="text-xs" style={{ color: '#888' }}>{lead.city || '—'} · {fmtDate(lead.createdAt)}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
                       {statusConfig[lead.status] && (
-                        <span className="text-xs font-semibold px-3 py-1 rounded-full"
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
                           style={{ background: statusConfig[lead.status].bg, color: statusConfig[lead.status].text, border: `1px solid ${statusConfig[lead.status].border}` }}>
                           {lead.status}
                         </span>
                       )}
-                    </td>
-                    <td className="px-5 py-4">
                       <button onClick={() => setSelectedLead(lead)}
-                        className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors" style={{ color: '#aaa' }}
-                        onMouseEnter={e => { e.currentTarget.style.background='#f5f5f5'; e.currentTarget.style.color='#0a0a0a' }}
-                        onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='#aaa' }}>
-                        <Eye size={14} />
+                        className="w-7 h-7 rounded-lg flex items-center justify-center"
+                        style={{ background: '#f5f5f5', color: '#555' }}>
+                        <Eye size={13} />
                       </button>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-            {leads.length === 0 && !loading && (
-              <div className="py-16 text-center">
-                <Search size={28} className="mx-auto mb-3" style={{ color: '#ddd' }} />
-                <p className="text-sm" style={{ color: '#888' }}>No leads match your search</p>
-              </div>
-            )}
-          </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2">
+                    <div className="flex items-center gap-1.5 text-xs" style={{ color: '#555' }}>
+                      <Mail size={10}/><span className="truncate">{lead.email}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs" style={{ color: '#555' }}>
+                      <Phone size={10}/>{lead.phone}
+                    </div>
+                    <div className="text-xs font-semibold" style={{ color: '#0a0a0a' }}>
+                      {fmtAmount(lead.loanAmount)}
+                    </div>
+                    <div className="text-xs" style={{ color: '#888' }}>{lead.loanPurpose || '—'}</div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </>
         )}
       </div>
       <p className="text-xs mt-3 text-right" style={{ color: '#ccc' }}>Showing {leads.length} lead{leads.length !== 1 ? 's' : ''}</p>
@@ -980,18 +1027,48 @@ function ProfileSettings({ user }) {
 // ── Main AdminPage ─────────────────────────────────────────────
 export default function AdminPage() {
   const [activeSection, setActiveSection] = useState('leads')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // Desktop sidebar width based on collapsed state
+  const sidebarW = sidebarCollapsed ? 68 : 240
 
   return (
     <div className="min-h-screen" style={{ background: '#f9f9f9' }}>
-      {/* White sidebar — fixed left, full height */}
-      <AdminSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
 
-      {/* Main content — offset by sidebar width */}
+      {/* Sidebar — passes collapsed state up so main content can offset correctly */}
+      <AdminSidebar
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        collapsed={sidebarCollapsed}
+        onCollapsedChange={setSidebarCollapsed}
+      />
+
+      {/* ── Main content ──
+          Mobile  : full width, top-pad 60px (mobile header height)
+          Desktop : left-margin = sidebar width, top-pad 0
+      ── */}
       <div
-        className="transition-all duration-300"
-        style={{ marginLeft: 240, paddingTop: 32 }}
+        className="transition-all duration-[220ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+        style={{
+          /* mobile: no left margin, pad for top bar */
+          marginLeft: 0,
+          paddingTop: 60,
+        }}
       >
-        <div className="px-8 py-8 max-w-6xl min-h-screen" style={{ background: '#f9f9f9' }}>
+        {/* Responsive override for lg screens */}
+        <style>{`
+          @media (min-width: 1024px) {
+            .admin-main-content {
+              margin-left: ${sidebarW}px !important;
+              padding-top: 0 !important;
+            }
+          }
+        `}</style>
+
+        <div
+          className="admin-main-content transition-all duration-[220ms] ease-[cubic-bezier(0.4,0,0.2,1)] px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-7xl min-h-screen"
+          style={{ background: '#f9f9f9' }}
+        >
           {activeSection === 'leads'    && <LeadsDashboard />}
           {activeSection === 'stats'    && <Analytics />}
           {activeSection === 'settings' && <AdminSettings />}

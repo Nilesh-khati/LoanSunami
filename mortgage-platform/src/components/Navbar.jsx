@@ -19,6 +19,8 @@ export default function Navbar() {
   const navigate  = useNavigate()
   const { user, signout } = useAuth()
 
+  const isAdmin = user?.role === 'admin'
+
   const loanTimer    = useRef(null)
   const profileTimer = useRef(null)
 
@@ -76,16 +78,10 @@ export default function Navbar() {
           {/* ── Desktop center links ── */}
           <div className="hidden lg:flex items-center gap-1 flex-1 justify-center">
 
-            {/* Individual / Business toggle */}
-            <div className="pill-toggle mr-2">
-              <button className={userType === 'Individual' ? 'active' : ''} onClick={() => setUserType('Individual')}>Individual</button>
-              <button className={userType === 'Business'   ? 'active' : ''} onClick={() => setUserType('Business')}>Business</button>
-            </div>
-
-            {/* Home */}
+            {/* Home — always visible */}
             <Link to="/" className="btn-ghost-nav">Home</Link>
 
-            {/* Loan dropdown */}
+            {/* Loan dropdown — always visible */}
             <div
               className="relative"
               onMouseEnter={() => { clearTimeout(loanTimer.current); setLoanOpen(true) }}
@@ -113,16 +109,19 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
 
-            <Link to="/calculator" className="btn-ghost-nav flex items-center gap-1.5">
-              <Calculator size={14} />
-              Calculator
-            </Link>
-            <Link to="/#faq" className="btn-ghost-nav flex items-center gap-1.5">
-              <HelpCircle size={14} />
-              Help
-            </Link>
-            {user?.role === 'admin' && (
-              <Link to="/admin" className="btn-ghost-nav flex items-center gap-1.5">
+            {/* Calculator — REMOVED */}
+
+            {/* Admin — admin only */}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="btn-ghost-nav flex items-center gap-1.5"
+                style={{
+                  color: location.pathname.startsWith('/admin') ? '#0a0a0a' : '#555',
+                  background: location.pathname.startsWith('/admin') ? '#f0f0f0' : 'transparent',
+                  fontWeight: 600,
+                }}
+              >
                 <Shield size={14} />
                 Admin
               </Link>
@@ -132,112 +131,33 @@ export default function Navbar() {
           {/* ── Desktop right ── */}
           <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
             {user ? (
-              /* LOGGED IN — profile dropdown */
-              <div
-                className="relative"
-                onMouseEnter={() => { clearTimeout(profileTimer.current); setProfileOpen(true) }}
-                onMouseLeave={() => { profileTimer.current = setTimeout(() => setProfileOpen(false), 150) }}
-              >
+              isAdmin ? (
+                /* ADMIN — kuch nahi, sirf Sign Out */
                 <button
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-2xl transition-all"
-                  style={{ background: '#f5f5f5', border: '1.5px solid #e5e5e5' }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = '#0a0a0a'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e5e5'}
+                  onClick={handleSignout}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+                  style={{ background: '#fef2f2', color: '#dc2626', border: '1.5px solid #fecaca' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.borderColor = '#f87171' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#fecaca' }}
                 >
-                  <div
-                    className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0"
-                    style={{
-                      background: user.role === 'admin' ? '#c8f542' : '#0a0a0a',
-                      color:      user.role === 'admin' ? '#0a0a0a' : '#ffffff',
-                    }}
-                  >
+                  <LogOut size={14} /> Sign Out
+                </button>
+              ) : (
+                /* NON-ADMIN — sirf naam dikhao, Sign Out nahi */
+                <div className="flex items-center gap-2 px-3 py-2 rounded-2xl"
+                  style={{ background: '#f5f5f5', border: '1.5px solid #e5e5e5' }}>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0"
+                    style={{ background: '#0a0a0a', color: '#ffffff' }}>
                     {initials}
                   </div>
-                  <div className="text-left leading-tight">
-                    <p className="text-xs font-semibold" style={{ color: '#0a0a0a' }}>
-                      {user.fullName?.split(' ')[0]}
-                    </p>
-                    <p style={{ color: '#888', fontSize: '0.65rem' }}>
-                      {user.role === 'admin' ? '👑 Admin' : 'User'}
-                    </p>
-                  </div>
-                  <ChevronDown size={12} style={{ color: '#aaa', transition: 'transform 0.2s', transform: profileOpen ? 'rotate(180deg)' : 'rotate(0)' }} />
-                </button>
-
-                <AnimatePresence>
-                  {profileOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 6 }} transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-64 rounded-2xl overflow-hidden"
-                      style={{ background: '#fff', border: '1.5px solid #e5e5e5', boxShadow: '0 8px 32px rgba(0,0,0,0.10)', zIndex: 100 }}
-                    >
-                      {/* Header */}
-                      <div className="p-4" style={{ background: '#f9f9f9', borderBottom: '1px solid #eee' }}>
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
-                            style={{
-                              background: user.role === 'admin' ? '#c8f542' : '#0a0a0a',
-                              color:      user.role === 'admin' ? '#0a0a0a' : '#fff',
-                            }}
-                          >
-                            {initials}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-sm truncate" style={{ color: '#0a0a0a' }}>{user.fullName}</p>
-                            <p className="text-xs truncate" style={{ color: '#888' }}>{user.email}</p>
-                          </div>
-                        </div>
-                        <span
-                          className="inline-block mt-2 text-xs font-semibold px-2.5 py-0.5 rounded-full"
-                          style={{
-                            background: user.role === 'admin' ? '#f3fdc8' : '#ededfd',
-                            color:      user.role === 'admin' ? '#65a30d' : '#6d28d9',
-                          }}
-                        >
-                          {user.role === 'admin' ? '👑 Admin' : '👤 User'}
-                        </span>
-                      </div>
-
-                      {/* Items */}
-                      <div className="p-1.5">
-                        {user.role === 'admin' && (
-                          <Link
-                            to="/admin"
-                            className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
-                            style={{ color: '#555' }}
-                            onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                          >
-                            <Shield size={14} /> Admin Dashboard
-                          </Link>
-                        )}
-                        <button
-                          onClick={handleSignout}
-                          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
-                          style={{ color: '#dc2626' }}
-                          onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                        >
-                          <LogOut size={14} /> Sign Out
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                  <span className="text-xs font-semibold" style={{ color: '#0a0a0a' }}>
+                    {user.fullName?.split(' ')[0]}
+                  </span>
+                </div>
+              )
             ) : (
-              /* NOT LOGGED IN */
-              <>
-                <Link to="/signin" className="text-sm font-medium transition-colors" style={{ color: '#555' }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#0a0a0a'}
-                  onMouseLeave={e => e.currentTarget.style.color = '#555'}
-                >
-                  Sign In
-                </Link>
-                <Link to="/apply" className="btn-primary text-sm py-2.5 px-5">Apply Now</Link>
-              </>
+              /* NOT LOGGED IN — Apply Now button only, no Sign In */
+              <Link to="/apply" className="btn-primary text-sm py-2.5 px-5">Apply Now</Link>
             )}
           </div>
 
@@ -258,13 +178,12 @@ export default function Navbar() {
       >
         <div className="flex items-center justify-around px-2 py-2">
           {[
-            { to: '/',           icon: Home,       label: 'Home'       },
-            { to: '/calculator', icon: Calculator, label: 'Calculator' },
-            { to: '/apply',      icon: PenLine,    label: 'Apply'      },
-            { to: '/#faq',       icon: HelpCircle, label: 'Help'       },
+            { to: '/',      icon: Home,    label: 'Home'  },
+            { to: '/apply', icon: PenLine, label: 'Apply' },
+            ...(isAdmin ? [{ to: '/admin', icon: Shield, label: 'Admin' }] : []),
             ...(user
               ? [{ to: null, icon: User, label: user.fullName?.split(' ')[0] || 'Me', isProfile: true }]
-              : [{ to: '/signin', icon: User, label: 'Sign In' }]
+              : []
             ),
           ].map(({ to, icon: Icon, label, isProfile }) => {
             const active = to && (to === '/' ? location.pathname === '/' : location.pathname.startsWith(to.replace('/#','/')))
@@ -332,30 +251,30 @@ export default function Navbar() {
 
                 {user ? (
                   <>
-                    {/* Profile card */}
-                    <div className="flex items-center gap-3 p-4 rounded-2xl mb-4" style={{ background: '#f5f5f5' }}>
-                      <div className="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
-                        style={{ background: user.role==='admin' ? '#c8f542' : '#0a0a0a', color: user.role==='admin' ? '#0a0a0a' : '#fff' }}>
-                        {user.fullName?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+                    {/* Profile card — sirf non-admin ke liye */}
+                    {!isAdmin && (
+                      <div className="flex items-center gap-3 p-4 rounded-2xl mb-4" style={{ background: '#f5f5f5' }}>
+                        <div className="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
+                          style={{ background: '#0a0a0a', color: '#fff' }}>
+                          {user.fullName?.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm truncate" style={{ color: '#0a0a0a' }}>{user.fullName}</p>
+                          <p className="text-xs truncate" style={{ color: '#888' }}>{user.email}</p>
+                        </div>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ml-auto"
+                          style={{ background: '#ededfd', color: '#6d28d9' }}>
+                          User
+                        </span>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-sm truncate" style={{ color: '#0a0a0a' }}>{user.fullName}</p>
-                        <p className="text-xs truncate" style={{ color: '#888' }}>{user.email}</p>
-                      </div>
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ml-auto"
-                        style={{ background: user.role==='admin'?'#f3fdc8':'#ededfd', color: user.role==='admin'?'#65a30d':'#6d28d9' }}>
-                        {user.role==='admin' ? 'Admin' : 'User'}
-                      </span>
-                    </div>
+                    )}
 
-                    {/* Links */}
+                    {/* Links — admin sees Home + Loans + Admin, non-admin sees everything */}
                     <div className="space-y-1 mb-4">
                       {[
                         { to:'/', label:'🏠 Home' },
                         { to:'/apply', label:'📝 Apply for Loan' },
-                        { to:'/calculator', label:'🧮 EMI Calculator' },
-                        { to:'/#faq', label:'❓ Help Center' },
-                        ...(user.role==='admin' ? [{ to:'/admin', label:'🛡️ Admin Dashboard' }] : []),
+                        ...(isAdmin ? [{ to:'/admin', label:'🛡️ Admin Dashboard' }] : []),
                       ].map(({ to, label }) => (
                         <Link key={label} to={to} onClick={() => setMenuOpen(false)}
                           className="block px-4 py-3 rounded-xl text-sm font-medium transition-colors"
@@ -379,8 +298,6 @@ export default function Navbar() {
                       {[
                         { to:'/', label:'🏠 Home' },
                         { to:'/apply', label:'📝 Apply for Loan' },
-                        { to:'/calculator', label:'🧮 EMI Calculator' },
-                        { to:'/#faq', label:'❓ Help Center' },
                       ].map(({ to, label }) => (
                         <Link key={label} to={to} onClick={() => setMenuOpen(false)}
                           className="block px-4 py-3 rounded-xl text-sm font-medium"
@@ -389,10 +306,7 @@ export default function Navbar() {
                         </Link>
                       ))}
                     </div>
-                    <div className="flex gap-3">
-                      <Link to="/signin" onClick={() => setMenuOpen(false)} className="btn-ghost flex-1 justify-center text-sm">Sign In</Link>
-                      <Link to="/apply"  onClick={() => setMenuOpen(false)} className="btn-primary flex-1 justify-center text-sm">Apply Now</Link>
-                    </div>
+                    <Link to="/apply" onClick={() => setMenuOpen(false)} className="btn-primary w-full justify-center text-sm">Apply Now</Link>
                   </>
                 )}
               </div>

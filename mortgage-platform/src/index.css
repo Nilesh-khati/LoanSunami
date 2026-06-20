@@ -831,3 +831,23 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin
     margin-top: 32px;
   }
 }
+
+/* ════════════════════════
+   DATE INPUT — year sirf 4 digit
+════════════════════════ */
+input[type="date"]::-webkit-datetime-edit-year-field {
+  max-width: 4ch;
+  min-width: 4ch;
+  width: 4ch;
+}
+/* Placeholder text style */
+input[type="date"]::-webkit-datetime-edit-text {
+  color: #aaaaaa;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  cursor: pointer;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}

@@ -12,12 +12,9 @@ const steps = [
   { id: 5, title: 'Financial',      icon: FileText,   desc: 'Snapshot summary'       },
 ]
 
-const InputField = ({ label, type = 'text', placeholder, value, onChange }) => (
+const InputField = ({ label, type = 'text', placeholder, value, onChange, max, min }) => (
   <div>
-    <label
-      className="block text-xs font-semibold mb-1.5 uppercase tracking-wider"
-      style={{ color: '#888888' }}
-    >
+    <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: '#888888' }}>
       {label}
     </label>
     <input
@@ -25,10 +22,130 @@ const InputField = ({ label, type = 'text', placeholder, value, onChange }) => (
       placeholder={placeholder}
       value={value}
       onChange={onChange}
+      max={max}
+      min={min}
       className="input-field"
     />
   </div>
 )
+
+/* ── Custom DOB field — 3 separate inputs: DD / MM / YYYY ── */
+function DOBField({ value, onChange }) {
+  // value is stored as "YYYY-MM-DD" string in form state
+  const parts  = value ? value.split('-') : ['', '', '']
+  const year   = parts[0] || ''
+  const month  = parts[1] || ''
+  const day    = parts[2] || ''
+
+  const currentYear = new Date().getFullYear()
+
+  const update = (type, val) => {
+    const y = type === 'year'  ? val : year
+    const m = type === 'month' ? val : month
+    const d = type === 'day'   ? val : day
+    // only call onChange when all three have values
+    const combined = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`
+    onChange(combined)
+  }
+
+  const months = [
+    { val:'01', label:'January'   }, { val:'02', label:'February'  },
+    { val:'03', label:'March'     }, { val:'04', label:'April'     },
+    { val:'05', label:'May'       }, { val:'06', label:'June'      },
+    { val:'07', label:'July'      }, { val:'08', label:'August'    },
+    { val:'09', label:'September' }, { val:'10', label:'October'   },
+    { val:'11', label:'November'  }, { val:'12', label:'December'  },
+  ]
+
+  const daysInMonth = month && year
+    ? new Date(parseInt(year) || 2000, parseInt(month), 0).getDate()
+    : 31
+
+  const inputBase = {
+    background: '#ffffff',
+    border: '1.5px solid #e5e5e5',
+    borderRadius: '12px',
+    padding: '13px 12px',
+    fontSize: '0.9375rem',
+    color: '#0a0a0a',
+    outline: 'none',
+    transition: 'border-color 0.18s, box-shadow 0.18s',
+    fontFamily: 'inherit',
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider" style={{ color: '#888888' }}>
+        Date of Birth
+      </label>
+      <div className="grid grid-cols-3 gap-2">
+        {/* Day */}
+        <div className="flex flex-col gap-1">
+          <span className="text-xs" style={{ color: '#aaa' }}>Day</span>
+          <select
+            value={day}
+            onChange={e => update('day', e.target.value)}
+            style={inputBase}
+            className="appearance-none cursor-pointer"
+            onFocus={e => { e.target.style.borderColor='#0a0a0a'; e.target.style.boxShadow='0 0 0 3px rgba(13,13,13,0.08)' }}
+            onBlur={e  => { e.target.style.borderColor='#e5e5e5'; e.target.style.boxShadow='none' }}
+          >
+            <option value="">DD</option>
+            {Array.from({ length: daysInMonth }, (_, i) => {
+              const d = String(i + 1).padStart(2, '0')
+              return <option key={d} value={d}>{d}</option>
+            })}
+          </select>
+        </div>
+
+        {/* Month */}
+        <div className="flex flex-col gap-1">
+          <span className="text-xs" style={{ color: '#aaa' }}>Month</span>
+          <select
+            value={month}
+            onChange={e => update('month', e.target.value)}
+            style={inputBase}
+            className="appearance-none cursor-pointer"
+            onFocus={e => { e.target.style.borderColor='#0a0a0a'; e.target.style.boxShadow='0 0 0 3px rgba(13,13,13,0.08)' }}
+            onBlur={e  => { e.target.style.borderColor='#e5e5e5'; e.target.style.boxShadow='none' }}
+          >
+            <option value="">MM</option>
+            {months.map(({ val, label }) => (
+              <option key={val} value={val}>{label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Year */}
+        <div className="flex flex-col gap-1">
+          <span className="text-xs" style={{ color: '#aaa' }}>Year</span>
+          <input
+            type="number"
+            placeholder="YYYY"
+            value={year}
+            min={1900}
+            max={currentYear}
+            onChange={e => {
+              const val = e.target.value
+              // sirf 4 digit allow karo
+              if (val.length > 4) return
+              update('year', val)
+            }}
+            onKeyDown={e => {
+              // 4 se zyada digit type hone par rok do
+              if (year.length >= 4 && !['Backspace','Delete','Tab','ArrowLeft','ArrowRight'].includes(e.key)) {
+                e.preventDefault()
+              }
+            }}
+            style={inputBase}
+            onFocus={e => { e.target.style.borderColor='#0a0a0a'; e.target.style.boxShadow='0 0 0 3px rgba(13,13,13,0.08)' }}
+            onBlur={e  => { e.target.style.borderColor='#e5e5e5'; e.target.style.boxShadow='none' }}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const SelectField = ({ label, value, onChange, options }) => (
   <div>
@@ -223,7 +340,10 @@ export default function ApplyPage() {
                   </div>
                   <InputField label="Email Address" type="email" placeholder="rahul@email.com" value={form.email} onChange={update('email')} />
                   <InputField label="Phone Number" type="tel" placeholder="+91 98765 43210" value={form.phone} onChange={update('phone')} />
-                  <InputField label="Date of Birth" type="date" value={form.dob} onChange={update('dob')} />
+                  <DOBField
+                    value={form.dob}
+                    onChange={val => setForm(f => ({ ...f, dob: val }))}
+                  />
                 </div>
               )}
 

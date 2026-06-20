@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Mail, Lock, Eye, EyeOff, ArrowRight, LogIn, Zap, CheckCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function SignInPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const nextPath = searchParams.get('next') || '/'   // kahan jaana hai login ke baad
+
   const { signin } = useAuth()
   const [form, setForm]       = useState({ email: '', password: '' })
   const [showPass, setShowPass] = useState(false)
@@ -20,8 +23,13 @@ export default function SignInPage() {
     if (!form.email || !form.password) { setError('Please fill in all fields.'); return }
     setLoading(true)
     try {
-      await signin({ email: form.email, password: form.password })
-      navigate('/')
+      const data = await signin({ email: form.email, password: form.password })
+      // Admin → admin dashboard, baaki → next param ya home
+      if (data?.user?.role === 'admin') {
+        navigate('/admin', { replace: true })
+      } else {
+        navigate(nextPath, { replace: true })
+      }
     } catch (err) {
       setError(err.message || 'Sign in failed. Please try again.')
     } finally {
