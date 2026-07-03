@@ -69,6 +69,7 @@ const leadSchema = new mongoose.Schema(
         'Balance Transfer',
         'Business Loan',
         'Personal Loan',
+        'Home Loan',
         '',
       ],
       default: '',

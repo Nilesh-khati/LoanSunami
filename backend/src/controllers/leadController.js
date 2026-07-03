@@ -3,6 +3,93 @@ import { sendEmail, leadConfirmationEmail, adminNewLeadEmail } from '../utils/em
 import { leadsToCSV } from '../utils/csvExport.js'
 
 /**
+ * @desc    Submit a home loan application
+ * @route   POST /api/leads/home-loan
+ * @access  Public
+ */
+export const submitHomeLoan = async (req, res, next) => {
+  try {
+    const { loanSubType, ...rest } = req.body
+
+    const leadData = {
+      ...rest,
+      loanPurpose: loanSubType || 'Home Purchase',
+    }
+
+    if (req.user) leadData.user = req.user._id
+
+    const lead = await Lead.create(leadData)
+
+    Promise.all([
+      sendEmail(leadConfirmationEmail(lead)),
+      sendEmail(adminNewLeadEmail(lead)),
+    ])
+      .then(([u, a]) => {
+        if (u.success || a.success) Lead.findByIdAndUpdate(lead._id, { emailSent: true }).catch(() => {})
+      })
+      .catch(err => console.error('[Home Loan Email Error]', err.message))
+
+    res.status(201).json({
+      success: true,
+      message: 'Home loan application submitted. Our specialist will contact you within 24 hours.',
+      data: {
+        id: lead._id,
+        firstName: lead.firstName,
+        loanAmount: lead.loanAmount,
+        loanPurpose: lead.loanPurpose,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
+ * @desc    Submit a personal loan application
+ * @route   POST /api/leads/personal-loan
+ * @access  Public
+ */
+export const submitPersonalLoan = async (req, res, next) => {
+  try {
+    const { loanSubType, ...rest } = req.body
+
+    const leadData = {
+      ...rest,
+      loanPurpose: 'Personal Loan',
+      notes: loanSubType
+        ? `Purpose: ${loanSubType}${rest.notes ? `. ${rest.notes}` : ''}`
+        : rest.notes,
+    }
+
+    if (req.user) leadData.user = req.user._id
+
+    const lead = await Lead.create(leadData)
+
+    Promise.all([
+      sendEmail(leadConfirmationEmail(lead)),
+      sendEmail(adminNewLeadEmail(lead)),
+    ])
+      .then(([u, a]) => {
+        if (u.success || a.success) Lead.findByIdAndUpdate(lead._id, { emailSent: true }).catch(() => {})
+      })
+      .catch(err => console.error('[Personal Loan Email Error]', err.message))
+
+    res.status(201).json({
+      success: true,
+      message: 'Personal loan application submitted. Our specialist will contact you within 24 hours.',
+      data: {
+        id: lead._id,
+        firstName: lead.firstName,
+        loanAmount: lead.loanAmount,
+        loanPurpose: lead.loanPurpose,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+/**
  * @desc    Submit a new loan application (lead)
  * @route   POST /api/leads
  * @access  Public (optionally authenticated)

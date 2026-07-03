@@ -1,48 +1,51 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom'
-import LandingPage    from './pages/LandingPage'
-import ApplyPage      from './pages/ApplyPage'
-import CalculatorPage from './pages/CalculatorPage'
-import AdminPage      from './pages/AdminPage'
-import SignInPage     from './pages/SignInPage'
-import SignUpPage     from './pages/SignUpPage'
-import Navbar         from './components/Navbar'
-import { useAuth }    from './context/AuthContext.jsx'
+import Navbar      from './components/Navbar'
+import { useAuth } from './context/AuthContext.jsx'
 
-/* ─────────────────────────────────────────────────
-   Admin Protected Route
-   - Not logged in  → redirect to /signin?next=/admin
-   - Logged in, not admin → redirect to /
-   - Logged in, admin → render AdminPage
-───────────────────────────────────────────────── */
+/* ── Lazy-load every page so initial bundle is tiny ── */
+const LandingPage      = lazy(() => import('./pages/LandingPage'))
+const ApplyPage        = lazy(() => import('./pages/ApplyPage'))
+const CalculatorPage   = lazy(() => import('./pages/CalculatorPage'))
+const AdminPage        = lazy(() => import('./pages/AdminPage'))
+const SignInPage       = lazy(() => import('./pages/SignInPage'))
+const SignUpPage       = lazy(() => import('./pages/SignUpPage'))
+const BusinessLoanPage = lazy(() => import('./pages/BusinessLoanPage'))
+const PersonalLoanPage = lazy(() => import('./pages/PersonalLoanPage'))
+const HomeLoanPage     = lazy(() => import('./pages/HomeLoanPage'))
+const TodaysRatesPage  = lazy(() => import('./pages/TodaysRatesPage'))
+
+/* Minimal spinner shown only on the very first chunk load */
+function PageLoader() {
+  return (
+    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        style={{
+          width: 32, height: 32,
+          border: '3px solid #e5e5e5',
+          borderTopColor: '#0a0a0a',
+          borderRadius: '50%',
+          animation: 'spin 0.6s linear infinite',
+        }}
+      />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
+}
+
+/* ── Admin route guard ── */
 function AdminRoute() {
   const { user, loading } = useAuth()
 
-  // Wait for auth to resolve
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: '#0a0a0a', borderTopColor: 'transparent' }} />
-      </div>
-    )
-  }
+  if (loading) return <PageLoader />
+  if (!user)             return <Navigate to="/signin?next=/admin" replace />
+  if (user.role !== 'admin') return <Navigate to="/" replace />
 
-  // Not logged in → go to sign in, come back after
-  if (!user) {
-    return <Navigate to="/signin?next=/admin" replace />
-  }
-
-  // Logged in but not admin → go to home
-  if (user.role !== 'admin') {
-    return <Navigate to="/" replace />
-  }
-
-  // Admin confirmed → show dashboard
   return <AdminPage />
 }
 
 function AppLayout() {
-  const location   = useLocation()
+  const location    = useLocation()
   const isAuthPage  = ['/signin', '/signup'].includes(location.pathname)
   const isAdminPage = location.pathname.startsWith('/admin')
 
@@ -50,14 +53,20 @@ function AppLayout() {
     <div style={{ minHeight: '100vh', background: '#ffffff' }}>
       {!isAuthPage && !isAdminPage && <Navbar />}
       <div style={!isAuthPage && !isAdminPage ? { paddingTop: 68 } : {}}>
-        <Routes>
-          <Route path="/"           element={<LandingPage />}    />
-          <Route path="/apply"      element={<ApplyPage />}      />
-          <Route path="/calculator" element={<CalculatorPage />} />
-          <Route path="/admin"      element={<AdminRoute />}     />
-          <Route path="/signin"     element={<SignInPage />}     />
-          <Route path="/signup"     element={<SignUpPage />}     />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/"              element={<LandingPage />}      />
+            <Route path="/apply"         element={<ApplyPage />}        />
+            <Route path="/calculator"    element={<CalculatorPage />}   />
+            <Route path="/home-loan"     element={<HomeLoanPage />}     />
+            <Route path="/personal-loan" element={<PersonalLoanPage />} />
+            <Route path="/business-loan" element={<BusinessLoanPage />} />
+            <Route path="/rates"         element={<TodaysRatesPage />}  />
+            <Route path="/admin"         element={<AdminRoute />}       />
+            <Route path="/signin"        element={<SignInPage />}       />
+            <Route path="/signup"        element={<SignUpPage />}       />
+          </Routes>
+        </Suspense>
       </div>
     </div>
   )

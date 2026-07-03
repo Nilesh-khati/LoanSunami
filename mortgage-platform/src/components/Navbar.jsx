@@ -2,27 +2,22 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Menu, X, ChevronDown, Zap, LogOut, Shield,
-  Home, Calculator, HelpCircle, FileText, BarChart2,
-  User, PenLine,
+  ChevronDown, Zap, LogOut, Shield,
+  Home, Calculator, FileText, BarChart2, User,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Navbar() {
-  const [scrolled,    setScrolled]    = useState(false)
-  const [menuOpen,    setMenuOpen]    = useState(false)
-  const [loanOpen,    setLoanOpen]    = useState(false)
-  const [profileOpen, setProfileOpen] = useState(false)
-  const [userType,    setUserType]    = useState('Individual')
+  const [scrolled,  setScrolled]  = useState(false)
+  const [menuOpen,  setMenuOpen]  = useState(false)
+  const [loanOpen,  setLoanOpen]  = useState(false)
 
-  const location  = useLocation()
-  const navigate  = useNavigate()
+  const location = useLocation()
+  const navigate = useNavigate()
   const { user, signout } = useAuth()
 
-  const isAdmin = user?.role === 'admin'
-
-  const loanTimer    = useRef(null)
-  const profileTimer = useRef(null)
+  const isAdmin   = user?.role === 'admin'
+  const loanTimer = useRef(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 6)
@@ -33,7 +28,6 @@ export default function Navbar() {
   useEffect(() => {
     setMenuOpen(false)
     setLoanOpen(false)
-    setProfileOpen(false)
   }, [location])
 
   const handleSignout = async () => {
@@ -46,11 +40,11 @@ export default function Navbar() {
     : ''
 
   const loanItems = [
-    { to: '/apply',      label: 'Home Loan',      icon: Home      },
-    { to: '/apply',      label: 'Personal Loan',  icon: FileText  },
-    { to: '/apply',      label: 'Business Loan',  icon: BarChart2 },
-    { to: '/calculator', label: 'EMI Calculator', icon: Calculator },
-    { to: '/#rates',     label: "Today's Rates",  icon: BarChart2 },
+    { to: '/home-loan',     label: 'Home Loan',      icon: Home      },
+    { to: '/personal-loan', label: 'Personal Loan',  icon: FileText  },
+    { to: '/business-loan', label: 'Business Loan',  icon: BarChart2 },
+    { to: '/calculator',    label: 'EMI Calculator', icon: Calculator },
+    { to: '/rates',         label: "Today's Rates",  icon: BarChart2 },
   ]
 
   return (
@@ -81,8 +75,7 @@ export default function Navbar() {
             {/* Home — always visible */}
             <Link to="/" className="btn-ghost-nav">Home</Link>
 
-            {/* Loan dropdown — always visible */}
-            <div
+            {/* Loan dropdown — always visible */}            <div
               className="relative"
               onMouseEnter={() => { clearTimeout(loanTimer.current); setLoanOpen(true) }}
               onMouseLeave={() => { loanTimer.current = setTimeout(() => setLoanOpen(false), 130) }}
@@ -109,18 +102,12 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
 
-            {/* Calculator — REMOVED */}
-
-            {/* Admin — admin only */}
-            {isAdmin && (
+            {/* Admin link — sirf tab dikhao jab admin dashboard pe ho */}
+            {isAdmin && location.pathname.startsWith('/admin') && (
               <Link
                 to="/admin"
                 className="btn-ghost-nav flex items-center gap-1.5"
-                style={{
-                  color: location.pathname.startsWith('/admin') ? '#0a0a0a' : '#555',
-                  background: location.pathname.startsWith('/admin') ? '#f0f0f0' : 'transparent',
-                  fontWeight: 600,
-                }}
+                style={{ color: '#0a0a0a', background: '#f0f0f0', fontWeight: 600 }}
               >
                 <Shield size={14} />
                 Admin
@@ -132,18 +119,20 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
             {user ? (
               isAdmin ? (
-                /* ADMIN — kuch nahi, sirf Sign Out */
-                <button
-                  onClick={handleSignout}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-                  style={{ background: '#fef2f2', color: '#dc2626', border: '1.5px solid #fecaca' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.borderColor = '#f87171' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#fecaca' }}
-                >
-                  <LogOut size={14} /> Sign Out
-                </button>
+                /* ADMIN — Sign Out sirf tab dikhao jab admin dashboard pe ho */
+                location.pathname.startsWith('/admin') ? (
+                  <button
+                    onClick={handleSignout}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+                    style={{ background: '#fef2f2', color: '#dc2626', border: '1.5px solid #fecaca' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#fee2e2'; e.currentTarget.style.borderColor = '#f87171' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#fecaca' }}
+                  >
+                    <LogOut size={14} /> Sign Out
+                  </button>
+                ) : null  /* home ya kisi aur page pe kuch nahi */
               ) : (
-                /* NON-ADMIN — sirf naam dikhao, Sign Out nahi */
+                /* NON-ADMIN — sirf naam dikhao */
                 <div className="flex items-center gap-2 px-3 py-2 rounded-2xl"
                   style={{ background: '#f5f5f5', border: '1.5px solid #e5e5e5' }}>
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0"
@@ -156,7 +145,7 @@ export default function Navbar() {
                 </div>
               )
             ) : (
-              /* NOT LOGGED IN — Apply Now button only, no Sign In */
+              /* NOT LOGGED IN — Apply Now only */
               <Link to="/apply" className="btn-primary text-sm py-2.5 px-5">Apply Now</Link>
             )}
           </div>
@@ -179,8 +168,11 @@ export default function Navbar() {
         <div className="flex items-center justify-around px-2 py-2">
           {[
             { to: '/',      icon: Home,    label: 'Home'  },
-            { to: '/apply', icon: PenLine, label: 'Apply' },
-            ...(isAdmin ? [{ to: '/admin', icon: Shield, label: 'Admin' }] : []),
+            /* Admin tab — sirf admin dashboard pe dikhao */
+            ...(isAdmin && location.pathname.startsWith('/admin')
+              ? [{ to: '/admin', icon: Shield, label: 'Admin' }]
+              : []
+            ),
             ...(user
               ? [{ to: null, icon: User, label: user.fullName?.split(' ')[0] || 'Me', isProfile: true }]
               : []
@@ -273,8 +265,11 @@ export default function Navbar() {
                     <div className="space-y-1 mb-4">
                       {[
                         { to:'/', label:'🏠 Home' },
-                        { to:'/apply', label:'📝 Apply for Loan' },
-                        ...(isAdmin ? [{ to:'/admin', label:'🛡️ Admin Dashboard' }] : []),
+                        /* Admin link — sirf admin dashboard pe dikhao */
+                        ...(isAdmin && location.pathname.startsWith('/admin')
+                          ? [{ to:'/admin', label:'🛡️ Admin Dashboard' }]
+                          : []
+                        ),
                       ].map(({ to, label }) => (
                         <Link key={label} to={to} onClick={() => setMenuOpen(false)}
                           className="block px-4 py-3 rounded-xl text-sm font-medium transition-colors"
@@ -286,18 +281,20 @@ export default function Navbar() {
                       ))}
                     </div>
 
-                    <button onClick={handleSignout}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold"
-                      style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
-                      <LogOut size={15}/> Sign Out
-                    </button>
+                    {/* Sign Out — sirf admin dashboard pe dikhao */}
+                    {(!isAdmin || location.pathname.startsWith('/admin')) && (
+                      <button onClick={handleSignout}
+                        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold"
+                        style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' }}>
+                        <LogOut size={15}/> Sign Out
+                      </button>
+                    )}
                   </>
                 ) : (
                   <>
                     <div className="space-y-1 mb-4">
                       {[
                         { to:'/', label:'🏠 Home' },
-                        { to:'/apply', label:'📝 Apply for Loan' },
                       ].map(({ to, label }) => (
                         <Link key={label} to={to} onClick={() => setMenuOpen(false)}
                           className="block px-4 py-3 rounded-xl text-sm font-medium"

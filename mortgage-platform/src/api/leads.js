@@ -2,9 +2,19 @@ import api from './client.js'
 
 export const leadsApi = {
   /**
-   * Submit a new loan application
+   * Submit a general loan application
    */
   submit: (formData) => api.post('/leads', formData),
+
+  /**
+   * Submit a home loan application (dedicated endpoint)
+   */
+  submitHomeLoan: (formData) => api.post('/leads/home-loan', formData),
+
+  /**
+   * Submit a personal loan application (dedicated endpoint)
+   */
+  submitPersonalLoan: (formData) => api.post('/leads/personal-loan', formData),
 
   /**
    * Get all leads (admin)
